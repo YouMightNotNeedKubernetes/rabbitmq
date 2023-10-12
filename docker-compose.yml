@@ -1,0 +1,65 @@
+services:
+  server:
+    image: rabbitmq:${RABBITMQ_VERSION}-management-alpine
+    hostname: "rabbitmq-{{.Task.Slot}}-{{.Task.ID}}"
+    environment:
+      # Consul configuration
+      CONSUL_HTTP_ADDR: ${CONSUL_HTTP_ADDR:-consul}
+      CONSUL_HTTP_PORT: ${CONSUL_HTTP_PORT:-8500}
+      CONSUL_HTTP_SCHEME: ${CONSUL_HTTP_SCHEME:-https}
+      CONSUL_SERVICE_NAME: ${CONSUL_SERVICE_NAME:-rabbitmq}
+      # RabbitMQ configuration
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:-unique-erlang-cookie}
+    networks:
+      - rabbitmq
+      - rabbitmq_area_lan
+    ports:
+      - 4369:4369 # epmd peer discovery service
+      - 5671:5671 # AMQPS Port
+      - 5672:5672 # AMQP Port
+      - 15672:15672 # Management UI port
+      - 15692:15692 # Prometheus metrics (only if the Prometheus plugin is enabled)
+    configs:
+      - source: rabbitmq
+        target: /etc/rabbitmq/rabbitmq.conf
+      - source: rabbitmq-plugins
+        target: /etc/rabbitmq/enabled_plugins
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 1
+        failure_action: rollback
+        delay: 30s
+        order: stop-first
+      rollback_config:
+        parallelism: 1
+        delay: 30s
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+        window: 120s
+    logging:
+      options:
+        max-size: "12m"
+        max-file: "5"
+      driver: json-file
+
+networks:
+  rabbitmq:
+  rabbitmq_area_lan:
+
+volumes:
+  rabbitmq-data:
+    external: true
+
+configs:
+  rabbitmq:
+    template_driver: golang
+    file: ./configs/rabbitmq.conf
+  rabbitmq-plugins:
+    file: ./configs/enabled_plugins
