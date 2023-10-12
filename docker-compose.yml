@@ -1,17 +1,12 @@
 services:
-  server:
+  rabbitmq:
     image: rabbitmq:${RABBITMQ_VERSION}-management-alpine
     hostname: "rabbitmq-{{.Task.Slot}}-{{.Task.ID}}"
     environment:
-      # Consul configuration
-      CONSUL_HTTP_ADDR: ${CONSUL_HTTP_ADDR:-consul}
-      CONSUL_HTTP_PORT: ${CONSUL_HTTP_PORT:-8500}
-      CONSUL_HTTP_SCHEME: ${CONSUL_HTTP_SCHEME:-https}
-      CONSUL_SERVICE_NAME: ${CONSUL_SERVICE_NAME:-rabbitmq}
-      # RabbitMQ configuration
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
       RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:-unique-erlang-cookie}
+      RABBITMQ_CONFIG_FILES: /rabbitmq.conf.d
     networks:
       - rabbitmq
       - rabbitmq_area_lan
