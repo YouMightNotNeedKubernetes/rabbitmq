@@ -5,7 +5,7 @@ x-deploy: &x-deploy
       - node.labels.rabbitmq == true
   labels:
     io.prometheus.enabled: "true"
-    io.prometheus.port: 15692
+    io.prometheus.port: ${RABBITMQ_METRICS_PORT:-15692}
   update_config:
     parallelism: 1
     failure_action: rollback
@@ -25,9 +25,6 @@ x-logging: &x-logging
     max-size: "12m"
     max-file: "5"
   driver: json-file
-
-networks:
-  rabbitmq:
 
 volumes:
   rabbitmq:
@@ -56,14 +53,12 @@ services:
       CONSUL_HTTP_SCHEME: ${CONSUL_HTTP_SCHEME:-http}
       CONSUL_SERVICE_NAME: ${CONSUL_SERVICE_NAME:-{{.Service.Name}}}
       CONSUL_ACL_TOKEN: ${CONSUL_ACL_TOKEN}
-    networks:
-      - rabbitmq
     ports:
-      - 4369:4369 # epmd peer discovery service
-      - 5671:5671 # AMQPS Port
-      - 5672:5672 # AMQP Port
-      - 15672:15672 # Management UI port
-      - 15692:15692 # Prometheus metrics (only if the Prometheus plugin is enabled)
+      - ${RABBITMQ_EPMD_PORT:-4369}:4369 # epmd peer discovery service
+      - ${RABBITMQ_AMQPS_PORT:-5671}:5671 # AMQPS Port
+      - ${RABBITMQ_AMQP_PORT:-5672}:5672 # AMQP Port
+      - ${RABBITMQ_MANAGEMENT_PORT:-15672}:15672 # Management UI port
+      - ${RABBITMQ_METRICS_PORT:-15692}:15692 # Prometheus metrics (only if the Prometheus plugin is enabled)
     configs:
       - source: enabled_plugins
         target: /etc/rabbitmq/enabled_plugins
