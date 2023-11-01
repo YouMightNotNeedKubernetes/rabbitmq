@@ -26,6 +26,11 @@ x-logging: &x-logging
     max-file: "5"
   driver: json-file
 
+networks:
+  rabbitmq:
+    driver: overlay
+    attachable: true
+
 volumes:
   rabbitmq:
 
@@ -53,6 +58,8 @@ services:
       CONSUL_HTTP_SCHEME: ${CONSUL_HTTP_SCHEME:-http}
       CONSUL_SERVICE_NAME: ${CONSUL_SERVICE_NAME:-{{.Service.Name}}}
       CONSUL_ACL_TOKEN: ${CONSUL_ACL_TOKEN}
+    networks:
+      - rabbitmq
     ports:
       - ${RABBITMQ_EPMD_PORT:-4369}:4369 # epmd peer discovery service
       - ${RABBITMQ_AMQPS_PORT:-5671}:5671 # AMQPS Port
