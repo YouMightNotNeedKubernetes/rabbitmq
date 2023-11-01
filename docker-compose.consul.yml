@@ -1,8 +1,0 @@
-services:
-  rabbitmq:
-    environment:
-      # Consul configuration
-      CONSUL_HTTP_ADDR: ${CONSUL_HTTP_ADDR:-consul}
-      CONSUL_HTTP_PORT: ${CONSUL_HTTP_PORT:-8500}
-      CONSUL_HTTP_SCHEME: ${CONSUL_HTTP_SCHEME:-https}
-      CONSUL_SERVICE_NAME: ${CONSUL_SERVICE_NAME:-rabbitmq}

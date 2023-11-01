@@ -1,15 +1,57 @@
+x-deploy: &x-deploy
+  replicas: 3
+  update_config:
+    parallelism: 1
+    failure_action: rollback
+    delay: 30s
+    order: stop-first
+  rollback_config:
+    parallelism: 1
+    delay: 30s
+  restart_policy:
+    condition: on-failure
+    delay: 30s
+    max_attempts: 3
+    window: 120s
+
+x-logging: &x-logging
+  options:
+    max-size: "12m"
+    max-file: "5"
+  driver: json-file
+
+networks:
+  rabbitmq:
+
+volumes:
+  rabbitmq:
+
+configs:
+  enabled_plugins:
+    file: configs/enabled_plugins
+  rabbitmq.conf:
+    template_driver: golang
+    file: configs/rabbitmq.conf
+  peer-discovery-consul.conf:
+    template_driver: golang
+    file: configs/peer-discovery-consul.conf
+
 services:
   rabbitmq:
-    image: rabbitmq:${RABBITMQ_VERSION}-management-alpine
-    hostname: "rabbitmq-{{.Task.Slot}}-{{.Task.ID}}"
+    image: rabbitmq:${RABBITMQ_VERSION:?Please set RABBITMQ_VERSION environment variable}-management-alpine
+    hostname: rabbitmq-{{.Task.Slot}}
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
       RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:-unique-erlang-cookie}
-      RABBITMQ_CONFIG_FILES: /rabbitmq.conf.d
+      # Consul configuration
+      CONSUL_HTTP_ADDR: ${CONSUL_HTTP_ADDR:-consul}
+      CONSUL_HTTP_PORT: ${CONSUL_HTTP_PORT:-8500}
+      CONSUL_HTTP_SCHEME: ${CONSUL_HTTP_SCHEME:-http}
+      CONSUL_SERVICE_NAME: ${CONSUL_SERVICE_NAME:-{{.Service.Name}}}
+      CONSUL_ACL_TOKEN: ${CONSUL_ACL_TOKEN}
     networks:
       - rabbitmq
-      - rabbitmq_area_lan
     ports:
       - 4369:4369 # epmd peer discovery service
       - 5671:5671 # AMQPS Port
@@ -17,44 +59,16 @@ services:
       - 15672:15672 # Management UI port
       - 15692:15692 # Prometheus metrics (only if the Prometheus plugin is enabled)
     configs:
-      - source: rabbitmq
-        target: /etc/rabbitmq/rabbitmq.conf
-      - source: rabbitmq-plugins
+      - source: enabled_plugins
         target: /etc/rabbitmq/enabled_plugins
+      - source: rabbitmq.conf
+        target: /etc/rabbitmq/conf.d/10-defaults.conf
+      - source: peer-discovery-consul.conf
+        target: /etc/rabbitmq/conf.d/peer-discovery-consul.conf
     volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-    deploy:
-      replicas: 3
-      update_config:
-        parallelism: 1
-        failure_action: rollback
-        delay: 30s
-        order: stop-first
-      rollback_config:
-        parallelism: 1
-        delay: 30s
-      restart_policy:
-        condition: on-failure
-        delay: 30s
-        max_attempts: 3
-        window: 120s
-    logging:
-      options:
-        max-size: "12m"
-        max-file: "5"
-      driver: json-file
-
-networks:
-  rabbitmq:
-  rabbitmq_area_lan:
-
-volumes:
-  rabbitmq-data:
-    external: true
-
-configs:
-  rabbitmq:
-    template_driver: golang
-    file: ./configs/rabbitmq.conf
-  rabbitmq-plugins:
-    file: ./configs/enabled_plugins
+      - rabbitmq:/var/lib/rabbitmq
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    deploy: *x-deploy
+    logging: *x-logging
+      
