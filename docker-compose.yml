@@ -3,6 +3,9 @@ x-deploy: &x-deploy
   placement:
     constraints:
       - node.labels.rabbitmq == true
+  labels:
+    io.prometheus.enabled: "true"
+    io.prometheus.port: 15692
   update_config:
     parallelism: 1
     failure_action: rollback
@@ -74,4 +77,3 @@ services:
       - host.docker.internal:host-gateway
     deploy: *x-deploy
     logging: *x-logging
-      
