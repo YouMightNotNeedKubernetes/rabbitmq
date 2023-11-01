@@ -1,2 +1,2 @@
 # RabbitMQ /w Consul Peer Discovery
-A high-availability RabbitMQ deployment with Consul Peer Discovery for Docker Swarm
+A high-availability RabbitMQ deployment using Consul for Docker Swarm
