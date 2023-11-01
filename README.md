@@ -11,6 +11,9 @@ https://www.rabbitmq.com/
 
 ## Getting Started
 
+### Prerequisites
+- Hashicorp Consul, see [YouMightNotNeedKubernetes/hashicorp-consul](https://github.com/YouMightNotNeedKubernetes/hashicorp-consul) for deployment instructions.
+
 For more information on Cluster and Cluster Formation, see https://www.rabbitmq.com/clustering.html, https://www.rabbitmq.com/cluster-formation.html
 
 ### What is Replicated?
