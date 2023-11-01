@@ -9,6 +9,11 @@ ifneq ("$(wildcard docker-compose.override.yml)","")
 	compose_files += -c docker-compose.override.yml
 endif
 
+prometheus := false
+ifeq ($(prometheus),true)
+	compose_files += -c docker-compose.prometheus.yml
+endif
+
 it:
 	@echo "make [configs|deploy|destroy]"
 

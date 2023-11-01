@@ -1,0 +1,13 @@
+networks:
+  prometheus:
+    name: prometheus
+    external: true
+
+services:
+  rabbitmq:
+    networks:
+      - prometheus
+    deploy:
+      labels:
+        io.prometheus.enable: "true"
+        io.prometheus.scrape_port: ${RABBITMQ_METRICS_PORT:-15692}
